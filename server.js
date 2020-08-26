@@ -20,7 +20,6 @@ app.post("/append-order-number", async (req, res) => {
   console.log(req.headers.authorization);
   //basicauth = <base64 encrypted version of `Basic <username>:<password>`>
   let basicauth = Buffer.from(req.headers.authorization.slice(6), 'base64').toString('binary');
-  // basicauth = "jeremy:andrews"
   basicauth = basicauth.split(":");
   console.log(basicauth);
   if(username != basicauth[0] || password != basicauth[1]) {
