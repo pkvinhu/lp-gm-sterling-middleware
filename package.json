@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start-dev": "cross-env ENV=dev node server.js",
+    "start-prod": "cross-env ENV=prod node server.js",
+    "start": "npm run start-prod"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "google-spreadsheet": "^3.0.13",
