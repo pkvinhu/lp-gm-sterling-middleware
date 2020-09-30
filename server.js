@@ -65,12 +65,13 @@ app.post("/append-order-number", async (req, res) => {
   let r = await sheets.spreadsheets.values.get({
     auth,
     spreadsheetId: ss_id,
-    range: "A1:E"
+    range: "A1:H"
   });
 
   console.log(r);
   r = r.data.values;
   let edited;
+  let returnMsg;
   for (let i = 0; i < r.length; i++) {
     let order = r[i][0];
     let o = r[i][3];
@@ -79,6 +80,7 @@ app.post("/append-order-number", async (req, res) => {
       if (o != phoneNumber && n != phoneNumber) {
         r[i][4] = phoneNumber;
         edited = i;
+        returnMsg = r[i][7].replace('${#}', order)
         break;
       } else {
         if(n == phoneNumber) {
@@ -95,12 +97,13 @@ app.post("/append-order-number", async (req, res) => {
   let body = {
     values: r
   };
+
   // res.send(r);
   sheets.spreadsheets.values.update(
     {
       auth,
       spreadsheetId: ss_id,
-      range: "A1:E",
+      range: "A1:H",
       valueInputOption: "USER_ENTERED",
       resource: body
     },
@@ -112,7 +115,8 @@ app.post("/append-order-number", async (req, res) => {
       // var result = response.result;
       console.log(response);
       console.log(`${response.data.updatedRange} cells updated.`);
-      res.send({ message: `Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`, updated: response.config.data.values });
+      //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
+      res.send({ message: returnMsg, updated: response.config.data.values });
     }
   );
 });
