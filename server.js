@@ -97,8 +97,7 @@ app.post("/append-order-number", async (req, res) => {
   let body = {
     values: r
   };
-
-  // res.send(r);
+  try {
   sheets.spreadsheets.values.update(
     {
       auth,
@@ -117,8 +116,11 @@ app.post("/append-order-number", async (req, res) => {
       console.log(`${response.data.updatedRange} cells updated.`);
       //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
       res.send({ message: returnMsg, updated: response.config.data.values });
-    }
-  );
+    });
+  } catch (e) {
+    console.log(e);
+    res.send({ message: "error with updating sheet" })
+  }
 });
 
 app.listen(port, () => {
