@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 require("dotenv").config();
 let express = require("express");
@@ -13,7 +13,7 @@ const credsFromEnv = {
   type: process.env.type,
   project_id: process.env.project_id,
   private_key_id: process.env.private_key_id,
-  private_key: process.env.private_key.split('\\n').join('\n'),
+  private_key: process.env.private_key.split("\\n").join("\n"),
   client_email: process.env.client_email,
   client_id: process.env.client_id,
   auth_uri: process.env.auth_uri,
@@ -22,9 +22,9 @@ const credsFromEnv = {
   client_x509_cert_url: process.env.client_x509_cert_url
 };
 let credentials = credsFromEnv;
-if(process.env.ENV == "dev") {
+if (process.env.ENV == "dev") {
   credentials = require("./credentials");
-};
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -80,17 +80,20 @@ app.post("/append-order-number", async (req, res) => {
       if (o != phoneNumber && n != phoneNumber) {
         r[i][4] = phoneNumber;
         edited = i;
-        returnMsg = r[i][7].replace('${#}', order)
+        returnMsg = r[i][7].replace("${#}", order);
         break;
       } else {
-        if(n == phoneNumber) {
-          res.send({ message: "New number was previously edited and is the same as the currently requested." })
+        if (n == phoneNumber) {
+          res.send({
+            message:
+              "New number was previously edited and is the same as the currently requested."
+          });
         } else {
-        res.send({ message: "Phone number is the same." })
+          res.send({ message: "Phone number is the same." });
         }
       }
     } else if (i == r.length - 1) {
-      res.status(404).send({ message: "Order number does not exist." });
+      res.send({ message: "Order number does not exist." });
     }
   }
 
@@ -98,28 +101,29 @@ app.post("/append-order-number", async (req, res) => {
     values: r
   };
   try {
-  sheets.spreadsheets.values.update(
-    {
-      auth,
-      spreadsheetId: ss_id,
-      range: "A1:H",
-      valueInputOption: "USER_ENTERED",
-      resource: body
-    },
-    (err, response) => {
-      if (err) {
-        console.log(err);
-        res.status(500);
+    sheets.spreadsheets.values.update(
+      {
+        auth,
+        spreadsheetId: ss_id,
+        range: "A1:H",
+        valueInputOption: "USER_ENTERED",
+        resource: body
+      },
+      (err, response) => {
+        if (err) {
+          console.log(err);
+          res.status(500);
+        }
+        // var result = response.result;
+        console.log(response);
+        console.log(`${response.data.updatedRange} cells updated.`);
+        //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
+        res.send({ message: returnMsg, updated: response.config.data.values });
       }
-      // var result = response.result;
-      console.log(response);
-      console.log(`${response.data.updatedRange} cells updated.`);
-      //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
-      res.send({ message: returnMsg, updated: response.config.data.values });
-    });
+    );
   } catch (e) {
     console.log(e);
-    res.send({ message: "error with updating sheet" })
+    res.send({ message: "error with updating sheet" });
   }
 });
 
