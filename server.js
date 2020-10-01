@@ -36,16 +36,18 @@ app.get("/", (req, res) => {
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
-  console.log(req.headers.authorization);
+  console.log("ORDER NUMBER: ", orderNumber,"\nPHONE NUMBER: ", phoneNumber)
+  console.log("PHONE NUMBER: ", phoneNumber)
+  // console.log(req.headers.authorization);
   //basicauth = <base64 encrypted version of `Basic <username>:<password>`>
   let basicauth = Buffer.from(
     req.headers.authorization.slice(6),
     "base64"
   ).toString("binary");
   basicauth = basicauth.split(":");
-  console.log(basicauth);
+  // console.log(basicauth);
   if (username != basicauth[0] || password != basicauth[1]) {
-    console.log(username, basicauth[0], "    ", password, basicauth[1]);
+    // console.log(username, basicauth[0], "    ", password, basicauth[1]);
     res.status(401).send({ message: "Unauthorized!" });
   }
 
@@ -81,6 +83,7 @@ app.post("/append-order-number", async (req, res) => {
         r[i][4] = phoneNumber;
         edited = i;
         returnMsg = r[i][7].replace("${#}", order);
+        console.log("RETURN MSG: ", returnMsg)
         break;
       } else {
         if (n == phoneNumber) {
