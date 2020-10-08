@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
-  console.log("ORDER NUMBER: ", orderNumber,"\nPHONE NUMBER: ", phoneNumber)
+  console.log("ORDER NUMBER: ", orderNumber,)
   console.log("PHONE NUMBER: ", phoneNumber)
   // console.log(req.headers.authorization);
   //basicauth = <base64 encrypted version of `Basic <username>:<password>`>
@@ -67,7 +67,7 @@ app.post("/append-order-number", async (req, res) => {
   let r = await sheets.spreadsheets.values.get({
     auth,
     spreadsheetId: ss_id,
-    range: "A1:H"
+    range: "A1:F"
   });
 
   console.log(r);
@@ -76,13 +76,13 @@ app.post("/append-order-number", async (req, res) => {
   let returnMsg;
   for (let i = 0; i < r.length; i++) {
     let order = r[i][0];
-    let o = r[i][3];
-    let n = r[i][4];
+    let o = r[i][1];
+    let n = r[i][2];
     if (order == orderNumber) {
       if (o != phoneNumber && n != phoneNumber) {
-        r[i][4] = phoneNumber;
+        r[i][2] = phoneNumber;
         edited = i;
-        returnMsg = r[i][7].replace("${#}", order);
+        returnMsg = r[i][5].replace("<XXXXXX>", order);
         console.log("RETURN MSG: ", returnMsg)
         break;
       } else {
@@ -108,7 +108,7 @@ app.post("/append-order-number", async (req, res) => {
       {
         auth,
         spreadsheetId: ss_id,
-        range: "A1:H",
+        range: "A1:F",
         valueInputOption: "USER_ENTERED",
         resource: body
       },
