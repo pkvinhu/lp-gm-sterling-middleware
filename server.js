@@ -78,7 +78,7 @@ app.post("/append-order-number", async (req, res) => {
     let order = r[i][0];
     let o = r[i][1];
     let n = r[i][2];
-    if (order == orderNumber) {
+    if (order.toUpperCase() == orderNumber) {
       if (o != phoneNumber && n != phoneNumber) {
         r[i][2] = phoneNumber;
         edited = i;
