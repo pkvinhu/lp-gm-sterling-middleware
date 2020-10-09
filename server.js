@@ -88,11 +88,11 @@ app.post("/append-order-number", async (req, res) => {
       } else {
         if (n == phoneNumber) {
           res.send({
-            message:
-              "New number was previously edited and is the same as the currently requested."
+            message: r[i][5].replace("<XXXXXX>", order)
+              /*"New number was previously edited and is the same as the currently requested."*/
           });
         } else {
-          res.send({ message: "Phone number is the same." });
+          res.send({ message: r[i][5].replace("<XXXXXX>", order) /*"Phone number is the same."*/ });
         }
       }
     } else if (i == r.length - 1) {
