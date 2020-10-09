@@ -39,26 +39,28 @@ app.post("/append-order-number", async (req, res) => {
   console.log("ORDER NUMBER: ", orderNumber,)
   console.log("PHONE NUMBER: ", phoneNumber)
   // console.log(req.headers.authorization);
+
   //basicauth = <base64 encrypted version of `Basic <username>:<password>`>
   let basicauth = Buffer.from(
     req.headers.authorization.slice(6),
     "base64"
   ).toString("binary");
   basicauth = basicauth.split(":");
-  // console.log(basicauth);
   if (username != basicauth[0] || password != basicauth[1]) {
-    // console.log(username, basicauth[0], "    ", password, basicauth[1]);
     res.send({ message: "Unauthorized!" });
   }
 
-  if (!orderNumber) {
-    // orderNumber = "XSFJQ2";
-    res.send({ message: "No order number was sent." });
-  }
+  // if (!orderNumber) {
+  //   // orderNumber = "XSFJQ2";
+  //   res.send({ message: "No order number was sent." });
+  // }
+
+  /* IF NO NUMBER WAS SENT */
   if (!phoneNumber) {
     res.send({ message: "No phone number was sent." });
   }
 
+  /* GET SHEET DATA VALUES FOR PARSING */
   var doc = new GoogleSpreadsheet();
   await doc.useServiceAccountAuth(credentials);
   const auth = new google.auth.OAuth2();
@@ -72,6 +74,27 @@ app.post("/append-order-number", async (req, res) => {
 
   console.log(r);
   r = r.data.values;
+
+  /* IF PHONE NUMBER IS SENT BUT NO ORDER NUMBER, WE CHECK TO SEE IF PHONE NUMBER EXISTS IN VERIFIED NUMBERS */
+  if(!orderNumber) {
+    for(let i = 0; i < r.length; i++) {
+      let o = r[i][1];
+      let n = r[i][2];
+      if(n && n == phoneNumber) {
+        res.send({ message: "Phone number exists."})
+      } 
+      else if(!n && o == phoneNumber) {
+        res.send({ message: "Phone number exists."})
+      }
+      else {
+        res.send({ message: "Phone number does not exist."})
+      }
+    }
+  }
+
+  /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
+     AND PARSE PHONE NUMBER FOR CONSISTENCY
+     RESPOND IF NO UPDATES NECESSARY */
   let edited;
   let returnMsg;
   for (let i = 0; i < r.length; i++) {
@@ -103,6 +126,8 @@ app.post("/append-order-number", async (req, res) => {
   let body = {
     values: r
   };
+
+  /* IF UPDATES NECESSARY THEN MAKE CHANGES, THEN RESPOND TO USER */
   try {
     sheets.spreadsheets.values.update(
       {
