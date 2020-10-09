@@ -48,15 +48,15 @@ app.post("/append-order-number", async (req, res) => {
   // console.log(basicauth);
   if (username != basicauth[0] || password != basicauth[1]) {
     // console.log(username, basicauth[0], "    ", password, basicauth[1]);
-    res.status(401).send({ message: "Unauthorized!" });
+    res.send({ message: "Unauthorized!" });
   }
 
   if (!orderNumber) {
     // orderNumber = "XSFJQ2";
-    res.status(404).send({ message: "No order number was sent." });
+    res.send({ message: "No order number was sent." });
   }
   if (!phoneNumber) {
-    res.status(404).send({ message: "No phone number was sent." });
+    res.send({ message: "No phone number was sent." });
   }
 
   var doc = new GoogleSpreadsheet();
