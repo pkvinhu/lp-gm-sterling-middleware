@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
-  orderNumber = orderNumber.toUpperCase()
+  
   console.log("ORDER NUMBER: ", orderNumber,)
   console.log("PHONE NUMBER: ", phoneNumber)
   // console.log(req.headers.authorization);
@@ -95,6 +95,7 @@ app.post("/append-order-number", async (req, res) => {
      RESPOND IF NO UPDATES NECESSARY */
   let edited;
   // let returnMsg;
+  orderNumber = orderNumber.toUpperCase();
   let order;
   for (let i = 0; i < r.length; i++) {
     let ord = r[i][0];
