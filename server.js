@@ -162,6 +162,15 @@ app.post("/append-order-number", async (req, res) => {
 app.post('/opt-in-yes', (req, res) => {
   const { orderNumber } = req.body;
 
+  let basicauth = Buffer.from(
+    req.headers.authorization.slice(6),
+    "base64"
+  ).toString("binary");
+  basicauth = basicauth.split(":");
+  if (username != basicauth[0] || password != basicauth[1]) {
+    res.send({ message: "Unauthorized!" });
+  }
+
   var doc = new GoogleSpreadsheet();
   await doc.useServiceAccountAuth(credentials);
   const auth = new google.auth.OAuth2();
