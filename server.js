@@ -159,7 +159,7 @@ app.post("/append-order-number", async (req, res) => {
   }
 });
 
-app.post('/opt-in-yes', (req, res) => {
+app.post('/opt-in-yes', async (req, res) => {
   const { orderNumber } = req.body;
 
   let basicauth = Buffer.from(
