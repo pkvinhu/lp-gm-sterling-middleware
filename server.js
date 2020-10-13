@@ -79,12 +79,15 @@ app.post("/append-order-number", async (req, res) => {
       let o = r[i][1];
       let n = r[i][2];
       if(n && n == phoneNumber) {
+        console.log(o, n, phoneNumber)
         res.send({ message: "Phone number exists.", order})
       } 
       else if(!n && o == phoneNumber) {
+        console.log(o, n, phoneNumber)
         res.send({ message: "Phone number exists.", order})
       }
       else {
+        console.log(o, n, phoneNumber)
         res.send({ message: "Phone number does not exist."})
       }
     }
@@ -157,7 +160,7 @@ app.post("/append-order-number", async (req, res) => {
 });
 
 app.post('/opt-in-yes', async (req, res) => {
-  const { orderNumber } = req.body;
+  let { orderNumber } = req.body;
   let { username, password, ss_id } = process.env;
   orderNumber = orderNumber.toUpperCase();
 
@@ -192,13 +195,17 @@ app.post('/opt-in-yes', async (req, res) => {
       }
     }
 
+    let body = {
+      values: r
+    };
+
     sheets.spreadsheets.values.update(
       {
         auth,
         spreadsheetId: ss_id,
         range: "'OptIn'!A1:F",
         valueInputOption: "USER_ENTERED",
-        resource: r
+        resource: body
       },
       (err, response) => {
         if (err) {
@@ -207,7 +214,7 @@ app.post('/opt-in-yes', async (req, res) => {
         }
         console.log(response);
         console.log(`${response.data.updatedRange} cells updated.`);
-        res.send({ message: "successful and number has been added as new number", order });
+        res.send({ message: "successful" });
       }
     );
   } catch (e) {
