@@ -36,6 +36,7 @@ app.get("/", (req, res) => {
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
+  orderNumber = orderNumber.toUpperCase()
   console.log("ORDER NUMBER: ", orderNumber,)
   console.log("PHONE NUMBER: ", phoneNumber)
   // console.log(req.headers.authorization);
@@ -49,11 +50,6 @@ app.post("/append-order-number", async (req, res) => {
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
   }
-
-  // if (!orderNumber) {
-  //   // orderNumber = "XSFJQ2";
-  //   res.send({ message: "No order number was sent." });
-  // }
 
   /* IF NO NUMBER WAS SENT */
   if (!phoneNumber) {
@@ -104,7 +100,7 @@ app.post("/append-order-number", async (req, res) => {
     let ord = r[i][0];
     let o = r[i][1];
     let n = r[i][2];
-    if (ord == orderNumber.toUpperCase()) {
+    if (ord == orderNumber) {
       if (o != phoneNumber && n != phoneNumber) {
         r[i][2] = phoneNumber;
         edited = i;
@@ -161,6 +157,8 @@ app.post("/append-order-number", async (req, res) => {
 
 app.post('/opt-in-yes', async (req, res) => {
   const { orderNumber } = req.body;
+  let { username, password, ss_id } = process.env;
+  orderNumber = orderNumber.toUpperCase();
 
   let basicauth = Buffer.from(
     req.headers.authorization.slice(6),
