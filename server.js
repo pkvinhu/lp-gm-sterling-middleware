@@ -99,8 +99,9 @@ app.post("/append-order-number", async (req, res) => {
      RESPOND IF NO UPDATES NECESSARY */
   let edited;
   let returnMsg;
+  let order;
   for (let i = 0; i < r.length; i++) {
-    let order = r[i][0];
+    let ord = r[i][0];
     let o = r[i][1];
     let n = r[i][2];
     if (order == orderNumber.toUpperCase()) {
@@ -108,6 +109,7 @@ app.post("/append-order-number", async (req, res) => {
         r[i][2] = phoneNumber;
         edited = i;
         returnMsg = r[i][5].replace("<XXXXXX>", order);
+        order = ord;
         console.log("RETURN MSG: ", returnMsg)
         break;
       } else {
@@ -148,7 +150,7 @@ app.post("/append-order-number", async (req, res) => {
         console.log(response);
         console.log(`${response.data.updatedRange} cells updated.`);
         //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
-        res.send({ message: returnMsg, updated: response.config.data.values });
+        res.send({ message: returnMsg, updated: response.config.data.values, order });
       }
     );
   } catch (e) {
