@@ -74,7 +74,7 @@ app.post("/append-order-number", async (req, res) => {
   /* IF PHONE NUMBER IS SENT BUT NO ORDER NUMBER, WE CHECK TO SEE IF PHONE NUMBER EXISTS IN VERIFIED NUMBERS */
   if(!orderNumber) {
     console.log("Hit phone number check")
-    for(let i = 1; i <= r.length; i++) {
+    for(let i = 1; i < r.length; i++) {
       let order = r[i][0];
       let o = r[i][1];
       let n = r[i][2];
@@ -86,11 +86,12 @@ app.post("/append-order-number", async (req, res) => {
         console.log(o, n, phoneNumber)
         res.send({ message: "Phone number exists.", order})
       }
-      else {
-        console.log(o, n, phoneNumber)
-        res.send({ message: "Phone number does not exist."})
-      }
+      // else {
+      //   console.log(o, n, phoneNumber)
+      //   res.send({ message: "Phone number does not exist."})
+      // }
     }
+    res.send({ message: "Phone number does not exist."})
   }
 
   /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
