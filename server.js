@@ -79,11 +79,11 @@ app.post("/append-order-number", async (req, res) => {
       let o = r[i][1];
       let n = r[i][2];
       if(n && n == phoneNumber) {
-        console.log(o, n, phoneNumber)
+        console.log(o, n, phoneNumber, order)
         res.send({ message: "Phone number exists.", order})
       } 
       else if(!n && o == phoneNumber) {
-        console.log(o, n, phoneNumber)
+        console.log(o, n, phoneNumber, order)
         res.send({ message: "Phone number exists.", order})
       }
       // else {
