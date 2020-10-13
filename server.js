@@ -69,7 +69,7 @@ app.post("/append-order-number", async (req, res) => {
   let r = await sheets.spreadsheets.values.get({
     auth,
     spreadsheetId: ss_id,
-    range: "A1:F"
+    range: "'OptIn'!A1:F"
   });
 
   console.log(r);
@@ -137,7 +137,7 @@ app.post("/append-order-number", async (req, res) => {
       {
         auth,
         spreadsheetId: ss_id,
-        range: "A1:F",
+        range: "'OptIn'!A1:F",
         valueInputOption: "USER_ENTERED",
         resource: body
       },
