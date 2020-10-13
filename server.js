@@ -74,6 +74,9 @@ app.post("/append-order-number", async (req, res) => {
   /* IF PHONE NUMBER IS SENT BUT NO ORDER NUMBER, WE CHECK TO SEE IF PHONE NUMBER EXISTS IN VERIFIED NUMBERS */
   if (!orderNumber) {
     console.log("Hit phone number check");
+    if(phoneNumber[0] === "+") {
+      phoneNumber = phoneNumber.slice(1)
+    }
     for (let i = 1; i < r.length; i++) {
       let order = r[i][0];
       let o = r[i][1];
@@ -85,10 +88,6 @@ app.post("/append-order-number", async (req, res) => {
         console.log(o, n, phoneNumber, order);
         res.send({ message: "Phone number exists.", order });
       }
-      // else {
-      //   console.log(o, n, phoneNumber)
-      //   res.send({ message: "Phone number does not exist."})
-      // }
     }
     res.send({ message: "Phone number does not exist." });
   } else if (orderNumber) {
@@ -98,13 +97,13 @@ app.post("/append-order-number", async (req, res) => {
      RESPOND IF NO UPDATES NECESSARY */
     let edited;
     // let returnMsg;
-    // orderNumber = orderNumber;
+    orderNumber = orderNumber.toUpperCase();
     let order;
     for (let i = 0; i < r.length; i++) {
       let ord = r[i][0];
       let o = r[i][1];
       let n = r[i][2];
-      if (ord == orderNumber.toUpperCase()) {
+      if (ord == orderNumber) {
         if (o != phoneNumber && n != phoneNumber) {
           r[i][2] = phoneNumber;
           edited = i;
