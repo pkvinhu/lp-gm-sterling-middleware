@@ -36,9 +36,9 @@ app.get("/", (req, res) => {
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
-  
-  console.log("ORDER NUMBER: ", orderNumber,)
-  console.log("PHONE NUMBER: ", phoneNumber)
+
+  console.log("ORDER NUMBER: ", orderNumber);
+  console.log("PHONE NUMBER: ", phoneNumber);
   // console.log(req.headers.authorization);
 
   //basicauth = <base64 encrypted version of `Basic <username>:<password>`>
@@ -72,95 +72,103 @@ app.post("/append-order-number", async (req, res) => {
   r = r.data.values;
 
   /* IF PHONE NUMBER IS SENT BUT NO ORDER NUMBER, WE CHECK TO SEE IF PHONE NUMBER EXISTS IN VERIFIED NUMBERS */
-  if(!orderNumber) {
-    console.log("Hit phone number check")
-    for(let i = 1; i < r.length; i++) {
+  if (!orderNumber) {
+    console.log("Hit phone number check");
+    for (let i = 1; i < r.length; i++) {
       let order = r[i][0];
       let o = r[i][1];
       let n = r[i][2];
-      if(n && n == phoneNumber) {
-        console.log(o, n, phoneNumber, order)
-        res.send({ message: "Phone number exists.", order})
-      } 
-      else if(!n && o == phoneNumber) {
-        console.log(o, n, phoneNumber, order)
-        res.send({ message: "Phone number exists.", order})
+      if (n && n == phoneNumber) {
+        console.log(o, n, phoneNumber, order);
+        res.send({ message: "Phone number exists.", order });
+      } else if (!n && o == phoneNumber) {
+        console.log(o, n, phoneNumber, order);
+        res.send({ message: "Phone number exists.", order });
       }
       // else {
       //   console.log(o, n, phoneNumber)
       //   res.send({ message: "Phone number does not exist."})
       // }
     }
-    res.send({ message: "Phone number does not exist."})
-  }
+    res.send({ message: "Phone number does not exist." });
+  } else if (orderNumber) {
 
   /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
      AND PARSE PHONE NUMBER FOR CONSISTENCY
      RESPOND IF NO UPDATES NECESSARY */
-  let edited;
-  // let returnMsg;
-  // orderNumber = orderNumber;
-  let order;
-  for (let i = 0; i < r.length; i++) {
-    let ord = r[i][0];
-    let o = r[i][1];
-    let n = r[i][2];
-    if (ord == orderNumber.toUpperCase()) {
-      if (o != phoneNumber && n != phoneNumber) {
-        r[i][2] = phoneNumber;
-        edited = i;
-        // returnMsg = r[i][5].replace("<XXXXXX>", order);
-        order = ord;
-        // console.log("RETURN MSG: ", returnMsg)
-        break;
-      } else {
-        if (n == phoneNumber) {
-          res.send({
-            message: "New number was previously edited and is the same as the currently requested.", order: ord
-              /*"New number was previously edited and is the same as the currently requested."*/
-          });
+    let edited;
+    // let returnMsg;
+    // orderNumber = orderNumber;
+    let order;
+    for (let i = 0; i < r.length; i++) {
+      let ord = r[i][0];
+      let o = r[i][1];
+      let n = r[i][2];
+      if (ord == orderNumber.toUpperCase()) {
+        if (o != phoneNumber && n != phoneNumber) {
+          r[i][2] = phoneNumber;
+          edited = i;
+          // returnMsg = r[i][5].replace("<XXXXXX>", order);
+          order = ord;
+          // console.log("RETURN MSG: ", returnMsg)
+          break;
         } else {
-          res.send({ message: "Phone number is the same.", order: ord /*"Phone number is the same."*/ });
+          if (n == phoneNumber) {
+            res.send({
+              message:
+                "New number was previously edited and is the same as the currently requested.",
+              order: ord
+              /*"New number was previously edited and is the same as the currently requested."*/
+            });
+          } else {
+            res.send({
+              message: "Phone number is the same.",
+              order: ord /*"Phone number is the same."*/
+            });
+          }
         }
+      } else if (i == r.length - 1) {
+        res.send({ message: "Order number does not exist." });
       }
-    } else if (i == r.length - 1) {
-      res.send({ message: "Order number does not exist." });
     }
-  }
 
-  let body = {
-    values: r
-  };
+    let body = {
+      values: r
+    };
 
-  /* IF UPDATES NECESSARY THEN MAKE CHANGES, THEN RESPOND TO USER */
-  try {
-    sheets.spreadsheets.values.update(
-      {
-        auth,
-        spreadsheetId: ss_id,
-        range: "'OptIn'!A1:F",
-        valueInputOption: "USER_ENTERED",
-        resource: body
-      },
-      (err, response) => {
-        if (err) {
-          console.log(err);
-          res.status(500);
+    /* IF UPDATES NECESSARY THEN MAKE CHANGES, THEN RESPOND TO USER */
+    try {
+      sheets.spreadsheets.values.update(
+        {
+          auth,
+          spreadsheetId: ss_id,
+          range: "'OptIn'!A1:F",
+          valueInputOption: "USER_ENTERED",
+          resource: body
+        },
+        (err, response) => {
+          if (err) {
+            console.log(err);
+            res.status(500);
+          }
+          // var result = response.result;
+          console.log(response);
+          console.log(`${response.data.updatedRange} cells updated.`);
+          //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
+          res.send({
+            message: "successful and number has been added as new number",
+            /*updated: response.config.data.values,*/ order
+          });
         }
-        // var result = response.result;
-        console.log(response);
-        console.log(`${response.data.updatedRange} cells updated.`);
-        //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
-        res.send({ message: "successful and number has been added as new number", /*updated: response.config.data.values,*/ order });
-      }
-    );
-  } catch (e) {
-    console.log(e);
-    res.send({ message: "error with updating sheet" });
+      );
+    } catch (e) {
+      console.log(e);
+      res.send({ message: "error with updating sheet" });
+    }
   }
 });
 
-app.post('/opt-in-yes', async (req, res) => {
+app.post("/opt-in-yes", async (req, res) => {
   let { orderNumber } = req.body;
   let { username, password, ss_id } = process.env;
   orderNumber = orderNumber.toUpperCase();
@@ -188,9 +196,9 @@ app.post('/opt-in-yes', async (req, res) => {
     });
     r = r.data.values;
 
-    for(let i = 1; i < r.length; i++) {
+    for (let i = 1; i < r.length; i++) {
       let or = r[i][0];
-      if(or === orderNumber) {
+      if (or === orderNumber) {
         r[i][3] = "Y";
         r[i][4] = new Date().toLocaleDateString();
       }
@@ -224,7 +232,7 @@ app.post('/opt-in-yes', async (req, res) => {
     console.log(e);
     res.send({ message: "error with updating sheet" });
   }
-})
+});
 
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
