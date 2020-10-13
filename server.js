@@ -233,6 +233,46 @@ app.post("/opt-in-yes", async (req, res) => {
   }
 });
 
+app.get("/get-push-notifications", async (req, res) => {
+  let { username, password, ss_id } = process.env;
+  let basicauth = Buffer.from(
+    req.headers.authorization.slice(6),
+    "base64"
+  ).toString("binary");
+  basicauth = basicauth.split(":");
+  if (username != basicauth[0] || password != basicauth[1]) {
+    res.send({ message: "Unauthorized!" });
+  }
+
+  var doc = new GoogleSpreadsheet();
+  await doc.useServiceAccountAuth(credentials);
+  const auth = new google.auth.OAuth2();
+  auth.setCredentials(doc.jwtClient.credentials);
+  console.log("AUTH1: ", auth);
+  
+  try {
+    let r = await sheets.spreadsheets.values.get({
+      auth,
+      spreadsheetId: ss_id,
+      range: "'Push Notifications'!A1:B"
+    });
+    r = r.data.values;
+
+    let mapToSend = []
+    for (let i = 1; i < r.length; i++) {
+      let obj = {};
+      obj.phone = r[i][0];
+      obj.notification = r[i][1];
+      mapToSend.push(obj);
+    }
+
+    res.send({ message: "success", push_notifications: mapToSend})
+  } catch (e) {
+    console.log(e);
+    res.send({ message: "error getting values" });
+  }
+})
+
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
 });
