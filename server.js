@@ -200,6 +200,8 @@ app.post('/opt-in-yes', async (req, res) => {
       values: r
     };
 
+    console.log("NEW BODY: ", body);
+
     sheets.spreadsheets.values.update(
       {
         auth,
