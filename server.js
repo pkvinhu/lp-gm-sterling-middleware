@@ -159,6 +159,55 @@ app.post("/append-order-number", async (req, res) => {
   }
 });
 
+app.post('/opt-in-yes', (req, res) => {
+  const { orderNumber } = req.body;
+
+  var doc = new GoogleSpreadsheet();
+  await doc.useServiceAccountAuth(credentials);
+  const auth = new google.auth.OAuth2();
+  auth.setCredentials(doc.jwtClient.credentials);
+  console.log("AUTH1: ", auth);
+
+  try {
+    let r = await sheets.spreadsheets.values.get({
+      auth,
+      spreadsheetId: ss_id,
+      range: "'OptIn'!A1:F"
+    });
+    r = r.data.values;
+
+    for(let i = 1; i < r.length; i++) {
+      let or = r[i][0];
+      if(or === orderNumber) {
+        r[i][3] = "Y";
+        r[i][4] = new Date().toLocaleDateString();
+      }
+    }
+
+    sheets.spreadsheets.values.update(
+      {
+        auth,
+        spreadsheetId: ss_id,
+        range: "'OptIn'!A1:F",
+        valueInputOption: "USER_ENTERED",
+        resource: r
+      },
+      (err, response) => {
+        if (err) {
+          console.log(err);
+          res.status(500);
+        }
+        console.log(response);
+        console.log(`${response.data.updatedRange} cells updated.`);
+        res.send({ message: "successful and number has been added as new number", order });
+      }
+    );
+  } catch (e) {
+    console.log(e);
+    res.send({ message: "error with updating sheet" });
+  }
+})
+
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
 });
