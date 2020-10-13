@@ -98,7 +98,7 @@ app.post("/append-order-number", async (req, res) => {
      AND PARSE PHONE NUMBER FOR CONSISTENCY
      RESPOND IF NO UPDATES NECESSARY */
   let edited;
-  let returnMsg;
+  // let returnMsg;
   let order;
   for (let i = 0; i < r.length; i++) {
     let ord = r[i][0];
@@ -108,18 +108,18 @@ app.post("/append-order-number", async (req, res) => {
       if (o != phoneNumber && n != phoneNumber) {
         r[i][2] = phoneNumber;
         edited = i;
-        returnMsg = r[i][5].replace("<XXXXXX>", order);
+        // returnMsg = r[i][5].replace("<XXXXXX>", order);
         order = ord;
-        console.log("RETURN MSG: ", returnMsg)
+        // console.log("RETURN MSG: ", returnMsg)
         break;
       } else {
         if (n == phoneNumber) {
           res.send({
-            message: r[i][5].replace("<XXXXXX>", order)
+            message: "New number was previously edited and is the same as the currently requested.", order: ord
               /*"New number was previously edited and is the same as the currently requested."*/
           });
         } else {
-          res.send({ message: r[i][5].replace("<XXXXXX>", order) /*"Phone number is the same."*/ });
+          res.send({ message: "Phone number is the same.", order: ord /*"Phone number is the same."*/ });
         }
       }
     } else if (i == r.length - 1) {
@@ -150,7 +150,7 @@ app.post("/append-order-number", async (req, res) => {
         console.log(response);
         console.log(`${response.data.updatedRange} cells updated.`);
         //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
-        res.send({ message: returnMsg, updated: response.config.data.values, order });
+        res.send({ message: "successful and number has been added as new number", /*updated: response.config.data.values,*/ order });
       }
     );
   } catch (e) {
