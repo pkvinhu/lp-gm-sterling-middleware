@@ -259,10 +259,24 @@ app.get("/get-push-notifications", async (req, res) => {
     r = r.data.values;
 
     let mapToSend = []
+    /*
+    {
+            "consumerCountryCode": "1",
+            "consumerPhoneNumber": "6783410143",
+            "variables": {
+            	"1": "Hi Kristin, it's me, the proactive api. A second time!",
+                "2": "A second message just for fun"
+            }
+        },
+    */
     for (let i = 1; i < r.length; i++) {
       let obj = {};
-      obj.phone = r[i][0];
-      obj.notification = r[i][1];
+      let phone = r[i][0];
+      obj.consumerCountryCode = phone.slice(0,1);
+      obj.consumerPhoneNumber = phone.slice(1);
+      obj.variables = {
+        "1": r[i][1]
+      }
       mapToSend.push(obj);
     }
 
