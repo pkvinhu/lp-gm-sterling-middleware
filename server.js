@@ -5,48 +5,29 @@ let express = require("express");
 let app = express();
 let port = process.env.PORT || 3001;
 const { google } = require("googleapis");
-let { GoogleSpreadsheet } = require("google-spreadsheet");
-// let credentials = require("./credentials");
 const sheets = google.sheets("v4");
-
-const credsFromEnv = {
-  type: process.env.type,
-  project_id: process.env.project_id,
-  private_key_id: process.env.private_key_id,
-  private_key: process.env.private_key.split("\\n").join("\n"),
-  client_email: process.env.client_email,
-  client_id: process.env.client_id,
-  auth_uri: process.env.auth_uri,
-  token_uri: process.env.token_uri,
-  auth_provider_x509_cert_url: process.env.auth_provider_x509_cert_url,
-  client_x509_cert_url: process.env.client_x509_cert_url
-};
-let credentials = credsFromEnv;
-if (process.env.ENV == "dev") {
-  credentials = require("./credentials");
-}
+const {
+  credentials,
+  decrypt,
+  getAuth,
+  phoneCheck,
+  orderCheck
+} = require("./util/helpers");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res) => {
-  res.send("<h1>HELLO JEREMY</h1>");
+  res.send("<h1>HELLO WORLD, WELCOME TO THE GM MIDDLEWARE.</h1>");
 });
 
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
-
-  console.log("ORDER NUMBER: ", orderNumber);
-  console.log("PHONE NUMBER: ", phoneNumber);
+  // console.log("ORDER NUMBER: ", orderNumber);
+  // console.log("PHONE NUMBER: ", phoneNumber);
   // console.log(req.headers.authorization);
-
-  //basicauth = <base64 encrypted version of `Basic <username>:<password>`>
-  let basicauth = Buffer.from(
-    req.headers.authorization.slice(6),
-    "base64"
-  ).toString("binary");
-  basicauth = basicauth.split(":");
+  let basicauth = decrypt(req.headers.authorization.slice(6));
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
   }
@@ -56,80 +37,43 @@ app.post("/append-order-number", async (req, res) => {
     res.send({ message: "No phone number was sent." });
   }
 
-  /* GET SHEET DATA VALUES FOR PARSING */
-  var doc = new GoogleSpreadsheet();
-  await doc.useServiceAccountAuth(credentials);
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials(doc.jwtClient.credentials);
-  console.log("AUTH1: ", auth);
-  let r = await sheets.spreadsheets.values.get({
-    auth,
-    spreadsheetId: ss_id,
-    range: "'OptIn'!A1:F"
-  });
+  /* REMOVE '+' FROM PHONE NUMBER */
+  if (phoneNumber[0] === "+") {
+    phoneNumber = phoneNumber.slice(1);
+  }
 
-  console.log(r);
+  /* GET SHEET DATA VALUES FOR PARSING */
+  let auth;
+  let r;
+  try {
+    auth = await getAuth(credentials);
+    r = await sheets.spreadsheets.values.get({
+      auth,
+      spreadsheetId: ss_id,
+      range: "'OptIn'!A1:F"
+    });
+  } catch (e) {
+    console.log(e);
+    res.send({ message: "error authenticated with google sheet api" });
+  }
+
   r = r.data.values;
 
   /* IF PHONE NUMBER IS SENT BUT NO ORDER NUMBER, WE CHECK TO SEE IF PHONE NUMBER EXISTS IN VERIFIED NUMBERS */
   if (!orderNumber) {
-    console.log("Hit phone number check");
-    if(phoneNumber[0] === "+") {
-      phoneNumber = phoneNumber.slice(1)
-    }
-    for (let i = 1; i < r.length; i++) {
-      let order = r[i][0];
-      let o = r[i][1];
-      let n = r[i][2];
-      if (n && n == phoneNumber) {
-        console.log(o, n, phoneNumber, order);
-        res.send({ message: "Phone number exists.", order });
-      } else if (!n && o == phoneNumber) {
-        console.log(o, n, phoneNumber, order);
-        res.send({ message: "Phone number exists.", order });
-      }
-    }
-    res.send({ message: "Phone number does not exist." });
+    let message = phoneCheck(phoneNumber, r);
+    res.send(message);
   } else if (orderNumber) {
-
-  /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
+    /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
      AND PARSE PHONE NUMBER FOR CONSISTENCY
      RESPOND IF NO UPDATES NECESSARY */
-    let edited;
-    // let returnMsg;
     orderNumber = orderNumber.toUpperCase();
-    let order;
-    for (let i = 0; i < r.length; i++) {
-      let ord = r[i][0];
-      let o = r[i][1];
-      let n = r[i][2];
-      if (ord == orderNumber) {
-        if (o != phoneNumber && n != phoneNumber) {
-          r[i][2] = phoneNumber;
-          edited = i;
-          // returnMsg = r[i][5].replace("<XXXXXX>", order);
-          order = ord;
-          // console.log("RETURN MSG: ", returnMsg)
-          break;
-        } else {
-          if (n == phoneNumber) {
-            res.send({
-              message:
-                "New number was previously edited and is the same as the currently requested.",
-              order: ord
-              /*"New number was previously edited and is the same as the currently requested."*/
-            });
-          } else {
-            res.send({
-              message: "Phone number is the same.",
-              order: ord /*"Phone number is the same."*/
-            });
-          }
-        }
-      } else if (i == r.length - 1) {
-        res.send({ message: "Order number does not exist." });
-      }
+    let check = orderCheck(orderNumber, phoneNumber, r);
+    if (!check.updates) {
+      res.send({ ...check });
     }
+    r = check.r;
+    let { order } = check;
 
     let body = {
       values: r
@@ -150,13 +94,10 @@ app.post("/append-order-number", async (req, res) => {
             console.log(err);
             res.status(500);
           }
-          // var result = response.result;
           console.log(response);
-          console.log(`${response.data.updatedRange} cells updated.`);
-          //`Phone number was revised to "${phoneNumber}" on order number ${orderNumber}.`
           res.send({
             message: "successful and number has been added as new number",
-            /*updated: response.config.data.values,*/ order
+            order
           });
         }
       );
@@ -172,21 +113,12 @@ app.post("/opt-in-yes", async (req, res) => {
   let { username, password, ss_id } = process.env;
   orderNumber = orderNumber.toUpperCase();
 
-  let basicauth = Buffer.from(
-    req.headers.authorization.slice(6),
-    "base64"
-  ).toString("binary");
-  basicauth = basicauth.split(":");
+  let basicauth = decrypt(req.headers.authorization.slice(6));
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
   }
 
-  var doc = new GoogleSpreadsheet();
-  await doc.useServiceAccountAuth(credentials);
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials(doc.jwtClient.credentials);
-  console.log("AUTH1: ", auth);
-
+  let auth = await getAuth(credentials);
   try {
     let r = await sheets.spreadsheets.values.get({
       auth,
@@ -206,8 +138,6 @@ app.post("/opt-in-yes", async (req, res) => {
     let body = {
       values: r
     };
-
-    console.log("NEW BODY: ", body);
 
     sheets.spreadsheets.values.update(
       {
@@ -235,21 +165,12 @@ app.post("/opt-in-yes", async (req, res) => {
 
 app.get("/get-push-notifications", async (req, res) => {
   let { username, password, ss_id } = process.env;
-  let basicauth = Buffer.from(
-    req.headers.authorization.slice(6),
-    "base64"
-  ).toString("binary");
-  basicauth = basicauth.split(":");
+  let basicauth = decrypt(req.headers.authorization.slice(6));
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
   }
 
-  var doc = new GoogleSpreadsheet();
-  await doc.useServiceAccountAuth(credentials);
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials(doc.jwtClient.credentials);
-  console.log("AUTH1: ", auth);
-  
+  let auth = await getAuth(credentials);
   try {
     let r = await sheets.spreadsheets.values.get({
       auth,
@@ -258,7 +179,7 @@ app.get("/get-push-notifications", async (req, res) => {
     });
     r = r.data.values;
 
-    let mapToSend = []
+    let mapToSend = [];
     /*
     {
             "consumerCountryCode": "1",
@@ -272,20 +193,20 @@ app.get("/get-push-notifications", async (req, res) => {
     for (let i = 1; i < r.length; i++) {
       let obj = {};
       let phone = r[i][0];
-      obj.consumerCountryCode = phone.slice(0,1);
+      obj.consumerCountryCode = phone.slice(0, 1);
       obj.consumerPhoneNumber = phone.slice(1);
       obj.variables = {
         "1": r[i][1]
-      }
+      };
       mapToSend.push(obj);
     }
 
-    res.send({ message: "success", push_notifications: mapToSend})
+    res.send({ message: "success", push_notifications: mapToSend });
   } catch (e) {
     console.log(e);
     res.send({ message: "error getting values" });
   }
-})
+});
 
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
