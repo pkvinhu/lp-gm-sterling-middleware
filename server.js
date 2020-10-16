@@ -11,7 +11,9 @@ const {
   decrypt,
   getAuth,
   phoneCheck,
-  orderCheck
+  orderCheck,
+  optInEditSheet,
+  configureProactivePayload
 } = require("./util/helpers");
 
 app.use(express.json());
@@ -24,9 +26,8 @@ app.get("/", (req, res) => {
 app.post("/append-order-number", async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
   let { username, password, ss_id } = process.env;
-  // console.log("ORDER NUMBER: ", orderNumber);
-  // console.log("PHONE NUMBER: ", phoneNumber);
-  // console.log(req.headers.authorization);
+
+  /* BASIC AUTHENTICATION */
   let basicauth = decrypt(req.headers.authorization.slice(6));
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
@@ -64,7 +65,8 @@ app.post("/append-order-number", async (req, res) => {
     let message = phoneCheck(phoneNumber, r);
     res.send(message);
   } else if (orderNumber) {
-    /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
+
+  /* BOTH PHONE AND ORDER SENT, SO CHECK IF ORDER NUMBER EXISTS
      AND PARSE PHONE NUMBER FOR CONSISTENCY
      RESPOND IF NO UPDATES NECESSARY */
     orderNumber = orderNumber.toUpperCase();
@@ -113,32 +115,32 @@ app.post("/opt-in-yes", async (req, res) => {
   let { username, password, ss_id } = process.env;
   orderNumber = orderNumber.toUpperCase();
 
+  /* BASIC AUTHENTICATION */
   let basicauth = decrypt(req.headers.authorization.slice(6));
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
   }
 
-  let auth = await getAuth(credentials);
+  /* AUTH GOOGLE */
+  let auth;
+  let r;
   try {
-    let r = await sheets.spreadsheets.values.get({
+    auth = await getAuth(credentials);
+    r = await sheets.spreadsheets.values.get({
       auth,
       spreadsheetId: ss_id,
       range: "'OptIn'!A1:F"
     });
     r = r.data.values;
 
-    for (let i = 1; i < r.length; i++) {
-      let or = r[i][0];
-      if (or === orderNumber) {
-        r[i][3] = "Y";
-        r[i][4] = new Date().toLocaleDateString();
-      }
-    }
+    /* ADD YES AND DATE VALUES FOR OPT IN */
+    r = optInEditSheet(orderNumber, r);
 
     let body = {
       values: r
     };
 
+    /* GOOGLE SHEET API WRITE DATA */
     sheets.spreadsheets.values.update(
       {
         auth,
@@ -153,7 +155,6 @@ app.post("/opt-in-yes", async (req, res) => {
           res.status(500);
         }
         console.log(response);
-        console.log(`${response.data.updatedRange} cells updated.`);
         res.send({ message: "successful" });
       }
     );
@@ -165,41 +166,27 @@ app.post("/opt-in-yes", async (req, res) => {
 
 app.get("/get-push-notifications", async (req, res) => {
   let { username, password, ss_id } = process.env;
+
+  /* BASIC AUTHENTICATION */
   let basicauth = decrypt(req.headers.authorization.slice(6));
   if (username != basicauth[0] || password != basicauth[1]) {
     res.send({ message: "Unauthorized!" });
   }
 
-  let auth = await getAuth(credentials);
+  /* AUTH GOOGLE */
+  let auth;
+  let r;
   try {
-    let r = await sheets.spreadsheets.values.get({
+    auth = await getAuth(credentials);
+    r = await sheets.spreadsheets.values.get({
       auth,
       spreadsheetId: ss_id,
       range: "'Push Notifications'!A1:B"
     });
     r = r.data.values;
 
-    let mapToSend = [];
-    /*
-    {
-            "consumerCountryCode": "1",
-            "consumerPhoneNumber": "6783410143",
-            "variables": {
-            	"1": "Hi Kristin, it's me, the proactive api. A second time!",
-                "2": "A second message just for fun"
-            }
-        },
-    */
-    for (let i = 1; i < r.length; i++) {
-      let obj = {};
-      let phone = r[i][0];
-      obj.consumerCountryCode = phone.slice(0, 1);
-      obj.consumerPhoneNumber = phone.slice(1);
-      obj.variables = {
-        "1": r[i][1]
-      };
-      mapToSend.push(obj);
-    }
+    /* REFORMAT SHEET RESULTS AS PAYLOAD TO BE SENT TO PROACTIVE */
+    let mapToSend = configureProactivePayload(r);
 
     res.send({ message: "success", push_notifications: mapToSend });
   } catch (e) {
@@ -207,6 +194,20 @@ app.get("/get-push-notifications", async (req, res) => {
     res.send({ message: "error getting values" });
   }
 });
+
+app.get("/healthcheck", async (req, res, next) => {
+	const healthcheck = {
+		uptime: process.uptime(),
+		message: 'OK',
+		timestamp: Date.now()
+	};
+	try {
+		res.send({ message: "Good health."});
+	} catch (e) {
+		healthcheck.message = e;
+		res.status(503).send();
+	}
+})
 
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
