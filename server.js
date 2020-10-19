@@ -227,6 +227,7 @@ app.post("/get-push-notifications-by-phone", async (req, res) => {
 
 app.post("/log-proactive-campaigns", async (req, res) => {
   let { proactive } = req.body;
+  console.log(proactive)
 
   /* BASIC AUTHENTICATION */
   let basicauth = decrypt(req.headers.authorization.slice(6));
