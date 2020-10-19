@@ -29,4 +29,19 @@ The GM / Sterling Middleware includes a series of APIs used to authenticate agai
 * `client_x509_cert_url`=client cert url  
   
 ## Setting up Google Service Account
-![Create a Service Account on Google Cloud Console](./static/create-service-acct.png)  
+1. Create a service sccount on google cloud console
+![Create a service sccount on google cloud console](./static/create-service-acct.png)  
+  
+2. Create a private key associated to your newly create service account
+![Create a private key associated to your newly create service account](./static/create-service-acct-2.png)  
+  
+3. Confirm the format of key file to be downloaded in JSON and save the information in the proper environment variables
+![Confirm the format of key file to be downloaded in JSON and save the information in the proper environment variables](./static/create-service-acct-3.png)  
+
+4. Enable Google Sheets API under the newly created service account in the `APIs & Services` tab
+![Enable Google Sheets API under the newly created service account in the APIs & Services tab](./static/create-service-acct-4.png)  
+  
+5. Grab the spreadsheet id you want to interface with from the URL of the google spreadsheet and assign it to `ss_id` env var and share with the `client email` from the private key  
+
+6. You should be all set to go!
+
