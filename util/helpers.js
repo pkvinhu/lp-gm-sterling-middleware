@@ -120,6 +120,32 @@ const configureProactivePayload = (r) => {
     return mapToSend;
 }
 
+const filterForPushNotificationsByPhone = (r, phoneNumbers) => {
+  /* 0(mn) time, n space */
+  let numbers = {};
+  for(let i = 0; i < phoneNumbers.length; i++) {
+    let p = phoneNumbers[i][0] === "+" ? phoneNumbers[i].slice(1) : phoneNumbers[i];
+    numbers[p] = {
+      consumerCountryCode: p.slice(0,1),
+      consumerPhoneNumber: p.slice(1)
+    }
+  }
+
+  let mapToSend = [];
+  for (let i = 1; i < r.length; i++) {
+    let phone = r[i][0];
+    if(numbers[phone]) {
+      mapToSend.push({ 
+        ...numbers[phone],
+        variables: {
+          "1": r[i][1]
+        }
+      })
+    }
+  }
+  return mapToSend;
+}
+
 module.exports = {
   credentials,
   decrypt,
@@ -127,5 +153,6 @@ module.exports = {
   phoneCheck,
   orderCheck,
   optInEditSheet,
-  configureProactivePayload
+  configureProactivePayload,
+  filterForPushNotificationsByPhone
 };

@@ -13,7 +13,8 @@ const {
   phoneCheck,
   orderCheck,
   optInEditSheet,
-  configureProactivePayload
+  configureProactivePayload,
+  filterForPushNotificationsByPhone
 } = require("./util/helpers");
 
 app.use(express.json());
@@ -195,7 +196,39 @@ app.get("/get-push-notifications", async (req, res) => {
   }
 });
 
-app.get("/healthcheck", async (req, res, next) => {
+app.post("/get-push-notifications-by-phone", async (req, res) => {
+  let { username, password, ss_id } = process.env;
+  let { phoneNumbers } = req.body;
+
+  /* BASIC AUTHENTICATION */
+  let basicauth = decrypt(req.headers.authorization.slice(6));
+  if (username != basicauth[0] || password != basicauth[1]) {
+    res.send({ message: "Unauthorized!" });
+  }
+
+  /* AUTH GOOGLE */
+  let auth;
+  let r;
+  try {
+    auth = await getAuth(credentials);
+    r = await sheets.spreadsheets.values.get({
+      auth,
+      spreadsheetId: ss_id,
+      range: "'Push Notifications'!A1:B"
+    });
+    r = r.data.values;
+
+    /* FIND PUSH NOTIFICATIONS FOR SPECIFIED PHONE NUMBERS */
+    let mapToSend = filterForPushNotificationsByPhone(r, phoneNumbers);
+
+    res.send({ message: "success", push_notifications: mapToSend });
+  } catch (e) {
+    console.log(e);
+    res.send({ message: "error getting values" });
+  }
+})
+
+app.get("/healthcheck", async (req, res) => {
 	const healthcheck = {
 		uptime: process.uptime(),
 		message: 'OK',
