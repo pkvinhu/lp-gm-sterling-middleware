@@ -49,40 +49,40 @@ const phoneCheck = (phoneNumber, r) => {
 };
 
 const orderCheck = (orderNumber, phoneNumber, r) => {
-    let edited;
-    let order;
-    for (let i = 0; i < r.length; i++) {
-      let ord = r[i][0];
-      let o = r[i][1];
-      let n = r[i][2];
-      if (ord == orderNumber) {
-        if (o != phoneNumber && n != phoneNumber) {
-          r[i][2] = phoneNumber;
-          edited = i;
-          order = ord;
-          break;
+  let edited;
+  let order;
+  for (let i = 0; i < r.length; i++) {
+    let ord = r[i][0];
+    let o = r[i][1];
+    let n = r[i][2];
+    if (ord == orderNumber) {
+      if (o != phoneNumber && n != phoneNumber) {
+        r[i][2] = phoneNumber;
+        edited = i;
+        order = ord;
+        break;
+      } else {
+        if (n == phoneNumber) {
+          return {
+            message:
+              "New number was previously edited and is the same as the currently requested.",
+            order: ord,
+            updates: false
+          };
         } else {
-          if (n == phoneNumber) {
-            return {
-              message:
-                "New number was previously edited and is the same as the currently requested.",
-              order: ord,
-              updates: false
-            };
-          } else {
-            return {
-              message: "Phone number is the same.",
-              order: ord,
-              updates: false 
-            };
-          }
+          return {
+            message: "Phone number is the same.",
+            order: ord,
+            updates: false
+          };
         }
-      } else if (i == r.length - 1) {
-        return { updates: false, message: "Order number does not exist." };
       }
+    } else if (i == r.length - 1) {
+      return { updates: false, message: "Order number does not exist." };
     }
-    return { updates: true, message: null, r, order };
-}
+  }
+  return { updates: true, message: null, r, order };
+};
 
 const optInEditSheet = (orderNumber, r) => {
   for (let i = 1; i < r.length; i++) {
@@ -93,11 +93,11 @@ const optInEditSheet = (orderNumber, r) => {
     }
   }
   return r;
-}
+};
 
-const configureProactivePayload = (r) => {
+const configureProactivePayload = r => {
   let mapToSend = [];
-    /*
+  /*
     {
             "consumerCountryCode": "1",
             "consumerPhoneNumber": "6783410143",
@@ -107,44 +107,71 @@ const configureProactivePayload = (r) => {
             }
         },
     */
-    for (let i = 1; i < r.length; i++) {
-      let obj = {};
-      let phone = r[i][0];
-      obj.consumerCountryCode = phone.slice(0, 1);
-      obj.consumerPhoneNumber = phone.slice(1);
-      obj.variables = {
-        "1": r[i][1]
-      };
-      mapToSend.push(obj);
-    }
-    return mapToSend;
-}
+  for (let i = 1; i < r.length; i++) {
+    let obj = {};
+    let phone = r[i][0];
+    obj.consumerCountryCode = phone.slice(0, 1);
+    obj.consumerPhoneNumber = phone.slice(1);
+    obj.variables = {
+      "1": r[i][1]
+    };
+    mapToSend.push(obj);
+  }
+  return mapToSend;
+};
 
 const filterForPushNotificationsByPhone = (r, phoneNumbers) => {
   /* 0(mn) time, n space */
   let numbers = {};
-  for(let i = 0; i < phoneNumbers.length; i++) {
-    let p = phoneNumbers[i][0] === "+" ? phoneNumbers[i].slice(1) : phoneNumbers[i];
+  for (let i = 0; i < phoneNumbers.length; i++) {
+    let p =
+      phoneNumbers[i][0] === "+" ? phoneNumbers[i].slice(1) : phoneNumbers[i];
     numbers[p] = {
-      consumerCountryCode: p.slice(0,1),
+      consumerCountryCode: p.slice(0, 1),
       consumerPhoneNumber: p.slice(1)
-    }
+    };
   }
 
   let mapToSend = [];
   for (let i = 1; i < r.length; i++) {
     let phone = r[i][0];
-    if(numbers[phone]) {
-      mapToSend.push({ 
+    if (numbers[phone]) {
+      mapToSend.push({
         ...numbers[phone],
         variables: {
           "1": r[i][1]
         }
-      })
+      });
     }
   }
   return mapToSend;
-}
+};
+
+const formatProactiveCampMap = proactive => {
+  let { proactiveCampaignId, acceptedCustomers } = proactive;
+  let map = [];
+
+  for (let i = 0; i < acceptedCustomers.length; i++) {
+    let { id, phoneNumber } = acceptedCustomers[i];
+    map.push([id, phoneNumber, proactiveCampaignId]);
+  }
+
+  return map;
+};
+
+const formatProactiveCampMapSendToFaaS = proactive => {
+  let map = [];
+
+  for (let i = 0; i < proactive.length; i++) {
+    let deliver = proactive[i];
+    let phoneNumber = deliver[0];
+    let id = deliver[1];
+    let proactiveCampaignId = deliver[2];
+    map.push({ id, phoneNumber, proactiveCampaignId });
+  }
+
+  return map;
+};
 
 module.exports = {
   credentials,
@@ -154,5 +181,7 @@ module.exports = {
   orderCheck,
   optInEditSheet,
   configureProactivePayload,
-  filterForPushNotificationsByPhone
+  filterForPushNotificationsByPhone,
+  formatProactiveCampMap,
+  formatProactiveCampMapSendToFaaS
 };
