@@ -148,11 +148,11 @@ const filterForPushNotificationsByPhone = (r, phoneNumbers) => {
 };
 
 const formatProactiveCampMap = proactive => {
-  let { proactiveCampaignId, acceptedCustomers } = proactive;
+  let { proactiveCampaignId, acceptedConsumers } = proactive;
   let map = [];
 
-  for (let i = 0; i < acceptedCustomers.length; i++) {
-    let { id, phoneNumber } = acceptedCustomers[i];
+  for (let i = 0; i < acceptedConsumers.length; i++) {
+    let { id, phoneNumber } = acceptedConsumers[i];
     map.push([id, phoneNumber, proactiveCampaignId]);
   }
 
