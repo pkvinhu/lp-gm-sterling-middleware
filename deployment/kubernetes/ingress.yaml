@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gm-sterling-middleware
+  namespace: ${NAMESPACE}
+  labels:
+    lp_service: gm-sterling-middleware
+    lp_system: gm-sterling-middleware
+    lp_tier: app
+    Name: gmstmdwe
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: ${HOSTNAME}.${DOMAIN}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: na-gm-scheduler
+          servicePort: 3001
+  - host: gm-sterling.${DOMAIN}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: gm-sterling-middleware
+          servicePort: 3001

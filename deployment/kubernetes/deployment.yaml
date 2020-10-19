@@ -1,0 +1,107 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gm-sterling-middleware
+  namespace: ${NAMESPACE}
+  labels:
+    lp_service: gm-sterling-middleware
+    lp_system: gm-sterling-middleware
+    lp_tier: app
+    Name: gmstmdwe
+spec:
+  replicas: ${REPLICAS}
+  strategy:
+    rollingUpdate:
+      # specifies the maximum number of Pods that can be created above the desired number of Pods during the rolling update process
+      maxSurge: 1
+      # specifies the maximum number of Pods that can be unavailable during the rolling update process
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      lp_service: gm-sterling-middleware
+  template:
+    metadata:
+      labels:
+        lp_service: gm-sterling-middleware
+        lp_system: gm-sterling-middleware
+        lp_tier: app
+        lp_service_version: ${VERSION}-${BUILD_NUMBER}
+        lp_bb: nodejs
+    spec:
+      containers:
+        - name: gm-sterling-middleware
+          resources:
+             limits:
+               cpu: "1000m"
+               memory: "1Gi"
+             requests:
+               cpu: "100m"
+               memory: "128m"
+          image: ${IMAGE_NAME}
+          env: 
+            - name: ss_id
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: ss_id
+            - name: username
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: username
+            - name: password
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: password
+            - name: type
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: type
+            - name: project
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: project
+            - name: private_key_id
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: private_key_id
+            - name: private_key
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: private_key
+            - name: client_email
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: client_email
+            - name: client_id
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: client_id
+            - name: auth_uri
+              valueFrom: 
+                secretKeyRef: 
+                  name: gm-sterling-api-keys
+                  key: auth_uri
+            - name: token_uri
+              valueFrom:
+                secretKeyRef:
+                  name: gm-sterling-api-keys
+                  key: token_uri
+            - name: auth_provider_x509_cert_url
+              valueFrom:
+                secretKeyRef:
+                  name: gm-sterling-api-keys
+                  key: auth_provider_x509_cert_url
+            - name: client_x509_cert_url
+              valueFrom:
+                secretKeyRef:
+                  name: gm-sterling-api-keys
+                  key: client_x509_cert_url
