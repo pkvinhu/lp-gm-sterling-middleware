@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start-dev": "cross-env ENV=dev node server.js",
-    "start-prod": "cross-env ENV=prod node server.js",
+    "start-dev": "cross-env ENV=dev node server",
+    "start-prod": "cross-env ENV=prod node server",
     "start": "npm run start-prod"
   },
   "keywords": [],
