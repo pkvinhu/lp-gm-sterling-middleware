@@ -54,10 +54,10 @@ The GM / Sterling Middleware includes a series of APIs used to authenticate agai
 
 ## APIs
 * Each API uses Basic Authentication and the user/pw info is saved in the `.env` file
-* POST `/append-order-number` - takes two strings, an `orderNumber` and `phoneNumber` (required), and checks SS; if no order number, it'll verify if phone number exists and spit out the corresponding order number, else it will check for order number in payload and update phone number if different from listed 
-* POST `/opt-in-yes` - takes a string, `orderNumber`, and logs the opt-in information in SS
-* GET `/get-push-notifications` - gets all push notifications from from SS
-* GET `/get-push-notifications-by-phone` - takes an array of `phoneNumbers` and retrieves the push notifications for each
-* POST `/log-proactive-campaigns` - takes an payload with a string, `proactiveCampaignId`, and an array of objects `acceptedConsumers` w/ string `id` and `phoneNumber` which should return from proactive API and logs results into the SS
-* GET `/get-proactive-campaign-status` - gets the recently scheduled proactive campaign info saved into SS and clears the SS of the info
-* GET `/healthcheck` - checks that the application is up and running
+* POST `/api/optins/check-order-info` - takes two strings, an `orderNumber` and `phoneNumber` (required), and checks SS; if no order number, it'll verify if phone number exists and spit out the corresponding order number, else it will check for order number in payload and update phone number if different from listed 
+* POST `/api/optins/opt-in-yes` - takes a string, `orderNumber`, and logs the opt-in information in SS
+* GET `/api/notifications/get-push-notifications` - gets all push notifications from from SS
+* POST `/api/notifications/get-push-notifications-by-phone` - takes an array of `phoneNumbers` and retrieves the push notifications for each
+* POST `/api/proactive/log-proactive-campaigns` - takes an payload with a string, `proactiveCampaignId`, and an array of objects `acceptedConsumers` w/ string `id` and `phoneNumber` which should return from proactive API and logs results into the SS
+* GET `/api/proactive/get-proactive-campaign-status` - gets the recently scheduled proactive campaign info saved into SS and clears the SS of the info
+* GET `/api/healthcheck` - checks that the application is up and running
