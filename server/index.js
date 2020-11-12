@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
   res.send("<h1>HELLO WORLD, WELCOME TO THE GM MIDDLEWARE.</h1>");
 });
 
-app.use(router);
+app.use("/", router);
 
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
