@@ -82,7 +82,7 @@ router.post("/check-order-info", async (req, res) => {
               console.log(err);
               res.status(500);
             }
-            console.log(response);
+            // console.log(response);
             res.send({
               message: "successful and number has been added as new number",
               order
@@ -139,7 +139,7 @@ router.post("/check-order-info", async (req, res) => {
             console.log(err);
             res.status(500);
           }
-          console.log(response);
+        //   console.log(response);
           res.send({ message: "successful" });
         }
       );
