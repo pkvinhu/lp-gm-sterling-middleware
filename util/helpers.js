@@ -29,7 +29,6 @@ const getAuth = async cr => {
   await doc.useServiceAccountAuth(cr);
   const auth = new google.auth.OAuth2();
   auth.setCredentials(doc.jwtClient.credentials);
-  console.log("AUTH1: ", auth);
   return auth;
 };
 
@@ -38,11 +37,12 @@ const phoneCheck = (phoneNumber, r) => {
     let order = r[i][0];
     let o = r[i][1];
     let n = r[i][2];
-    console.log(o, n, phoneNumber, order);
     if (n && n == phoneNumber) {
       return { message: "Phone number exists.", order };
+      console.log(o, n, phoneNumber, order);
     } else if (!n && o == phoneNumber) {
       return { message: "Phone number exists.", order };
+      console.log(o, n, phoneNumber, order);
     }
   }
   return { message: "Phone number does not exist." };
