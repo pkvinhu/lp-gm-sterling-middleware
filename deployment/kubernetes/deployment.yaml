@@ -60,11 +60,11 @@ spec:
                 secretKeyRef: 
                   name: gm-sterling-api-keys
                   key: type
-            - name: project
+            - name: project_id
               valueFrom: 
                 secretKeyRef: 
                   name: gm-sterling-api-keys
-                  key: project
+                  key: project_id
             - name: private_key_id
               valueFrom: 
                 secretKeyRef: 
