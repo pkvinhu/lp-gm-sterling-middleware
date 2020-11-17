@@ -17,7 +17,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: na-gm-scheduler
+          serviceName: gm-sterling-middleware
           servicePort: 3001
   - host: gm-sterling.${DOMAIN}
     http:
