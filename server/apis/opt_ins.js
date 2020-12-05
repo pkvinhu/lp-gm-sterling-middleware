@@ -1,16 +1,14 @@
 const router = require("express").Router();
-const { google } = require("googleapis");
-const sheets = google.sheets("v4");
 const {
   credentials,
   getAuth,
   getSheetVals,
+  updateSheetVals,
   phoneCheck,
   orderCheck,
   optInEditSheet
 } = require("../../util/helpers");
 const { checkBasicAuth } = require("../middleware/auth_middleware");
-const { ss_id } = process.env;
 
 router.post("/check-order-info", checkBasicAuth, async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;
@@ -58,26 +56,15 @@ router.post("/check-order-info", checkBasicAuth, async (req, res) => {
 
       /* IF UPDATES NECESSARY THEN MAKE CHANGES, THEN RESPOND TO USER */
       try {
-        sheets.spreadsheets.values.update(
-          {
-            auth,
-            spreadsheetId: ss_id,
-            range: "'OptIn'!A1:F",
-            valueInputOption: "USER_ENTERED",
-            resource: body
-          },
-          (err, response) => {
-            if (err) {
-              console.log(err);
-              res.status(500);
-            }
-            // console.log(response);
-            res.send({
-              message: "successful and number has been added as new number",
-              order
-            });
-          }
-        );
+        response = await updateSheetVals('OptIn', 'A1:F', body, auth);
+        if(response.error) {
+          res.status(500);
+        } else {
+          res.send({
+            message: "successful and number has been added as new number",
+            order
+          });
+        }
       } catch (e) {
         console.log(e);
         res.send({ message: "error with updating sheet" });
@@ -105,23 +92,12 @@ router.post("/opt-in-yes", checkBasicAuth, async (req, res) => {
     };
 
     /* GOOGLE SHEET API WRITE DATA */
-    sheets.spreadsheets.values.update(
-      {
-        auth,
-        spreadsheetId: ss_id,
-        range: "'OptIn'!A1:F",
-        valueInputOption: "USER_ENTERED",
-        resource: body
-      },
-      (err, response) => {
-        if (err) {
-          console.log(err);
-          res.status(500);
-        }
-        //   console.log(response);
-        res.send({ message: "successful" });
-      }
-    );
+    response = await updateSheetVals('OptIn', 'A1:F', body, auth);
+    if(response.error) {
+      res.status(500);
+    } else {
+      res.send({ message: "successful" });
+    }
   } catch (e) {
     console.log(e);
     res.send({ message: "error with updating sheet" });

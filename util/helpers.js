@@ -43,6 +43,29 @@ const getSheetVals = async (sheet, range, auth) => {
   return r.data.values;
 }
 
+const updateSheetVals = async (sheet, range, body, auth) => {
+  let r = await sheets.spreadsheets.values.update(
+    {
+      auth,
+      spreadsheetId: ss_id,
+      range: `'${sheet}'!${range}`,
+      valueInputOption: "USER_ENTERED",
+      resource: body
+    })
+  return r;
+}
+
+const clearSheetVals = async (sheet, range, auth) => {
+  let r = await sheets.spreadsheets.values.clear(
+    {
+      auth,
+      spreadsheetId: ss_id,
+      range: `'${sheet}'!${range}`,
+      resource: {}
+    });
+    return r;
+}
+
 const phoneCheck = (phoneNumber, r) => {
   for (let i = 1; i < r.length; i++) {
     let order = r[i][0];
@@ -189,6 +212,8 @@ module.exports = {
   decrypt,
   getAuth,
   getSheetVals,
+  updateSheetVals,
+  clearSheetVals,
   phoneCheck,
   orderCheck,
   optInEditSheet,
