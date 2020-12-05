@@ -10,6 +10,7 @@ const {
   optInEditSheet
 } = require("../../util/helpers");
 const { checkBasicAuth } = require("../middleware/auth_middleware");
+const { ss_id } = process.env;
 
 router.post("/check-order-info", checkBasicAuth, async (req, res) => {
   let { orderNumber, phoneNumber } = req.body;

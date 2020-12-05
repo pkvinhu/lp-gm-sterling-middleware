@@ -9,6 +9,7 @@ const {
   formatProactiveCampMapSendToFaaS
 } = require("../../util/helpers");
 const { checkBasicAuth } = require("../middleware/auth_middleware");
+const { ss_id } = process.env;
 
 router.post("/log-proactive-campaigns", checkBasicAuth, async (req, res) => {
   let { proactive } = req.body;
