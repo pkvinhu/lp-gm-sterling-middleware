@@ -1,5 +1,7 @@
 let { GoogleSpreadsheet } = require("google-spreadsheet");
 const { google } = require("googleapis");
+const sheets = google.sheets("v4");
+const { ss_id } = process.env;
 
 const credsFromEnv = {
   type: process.env.type,
@@ -31,6 +33,15 @@ const getAuth = async cr => {
   auth.setCredentials(doc.jwtClient.credentials);
   return auth;
 };
+
+const getSheetVals = async (sheet, range, auth) => {
+  let r = await sheets.spreadsheets.values.get({
+    auth,
+    spreadsheetId: ss_id,
+    range: `'${sheet}'!${range}`
+  });
+  return r.data.values;
+}
 
 const phoneCheck = (phoneNumber, r) => {
   for (let i = 1; i < r.length; i++) {
@@ -177,6 +188,7 @@ module.exports = {
   credentials,
   decrypt,
   getAuth,
+  getSheetVals,
   phoneCheck,
   orderCheck,
   optInEditSheet,
