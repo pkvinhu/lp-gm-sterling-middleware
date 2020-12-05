@@ -12,7 +12,7 @@ router.use('/api/notifications', notifications);
 router.use((req, res, next) => {
     const err = new Error("API route not found!");
     err.status = 404;
-    return error;
+    return err;
   });
 
 module.exports = router;
