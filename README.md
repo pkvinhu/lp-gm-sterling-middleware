@@ -44,20 +44,20 @@ We believed that the only way to interface with spreadsheet information from a R
 
 ## Architecture
 **The GM / Sterling solution is part of a larger infrastructure that is built with three composite parts. The middleware you see here will make more sense when seen in this context. These parts include 1) the file pickup/dropoff, 2) the middleware, and 3) the proactive messaging delivery apparatus.**
-(./static/GM_Sterling (4).png)
+[](./static/GM_Sterling (4).png)
 
 1. **The File Pickup/Dropoff**
 We are using integromat to schedule our integration with between GM's SFTP server and our Google Drive. Since our middleware can only talk to designated sheets that have been permitted through our GCP service account, we couldn't just drop a file and have the middleware begin speaking to it right away. The file would be newly created with its own unique information. 
 
-We decided that we would drop the file in an accessible location and schedule a google apps script (GAS) to search by the date appended to the file name. It would pull the range of that file into the central spreadsheet being read on a set time everyday. Two schedulers have been configured here to perform this operation programmatically: 1) integromat connection scheduled (file transfer from SFTP to Google Drive), and 2) app script scheduled with a GAS trigger. Dropoff is also scheduled with integromat to transfer google drive file back into SFTP server. (./static/GM_Sterling (2).png)
+We decided that we would drop the file in an accessible location and schedule a google apps script (GAS) to search by the date appended to the file name. It would pull the range of that file into the central spreadsheet being read on a set time everyday. Two schedulers have been configured here to perform this operation programmatically: 1) integromat connection scheduled (file transfer from SFTP to Google Drive), and 2) app script scheduled with a GAS trigger. Dropoff is also scheduled with integromat to transfer google drive file back into SFTP server. [](./static/GM_Sterling (2).png)
 
 2. **The Middleware**
-The Middleware is build with Javascript and Nodejs. It uses Expressjs to develop API endpoints which are further described in the last part of this readme. The bot uses two separate endpoints in the middleware to read/write opt-in information. The other APIs are used to retrieve push notifications from the second sheet given to us and to log the information of proactive campaign jobs so that we can check on the status of it's delivery when they are complete. (./static/GM_Sterling (1).png)
+The Middleware is build with Javascript and Nodejs. It uses Expressjs to develop API endpoints which are further described in the last part of this readme. The bot uses two separate endpoints in the middleware to read/write opt-in information. The other APIs are used to retrieve push notifications from the second sheet given to us and to log the information of proactive campaign jobs so that we can check on the status of it's delivery when they are complete. [](./static/GM_Sterling (1).png)
 
 3. **The Proactive Messaging Delivery Apparatus**
 We use LP's FaaS platform to perform our proactive message deliveries through two functions that are invoked by daily schedules. 
 
-The first function asks the middleware for the push notification information and schedules the deliveries through the proactive messaging api. Once scheduled, it takes the response back from the api (jobs scheduled) and logs it into a third spreadsheet we've created for tracking in aforementioned google sheet. The second function is a retry function that retrieves the logged information, inquires proactive of each job's status, and proceeds to retry each upon failure. (./static/GM_Sterling (3).png)
+The first function asks the middleware for the push notification information and schedules the deliveries through the proactive messaging api. Once scheduled, it takes the response back from the api (jobs scheduled) and logs it into a third spreadsheet we've created for tracking in aforementioned google sheet. The second function is a retry function that retrieves the logged information, inquires proactive of each job's status, and proceeds to retry each upon failure. [](./static/GM_Sterling (3).png)
 
 ## Setting up Google Service Account
 1. **Create a service sccount on google cloud console**  
